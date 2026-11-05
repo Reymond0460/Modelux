@@ -272,7 +272,7 @@ footer a{cursor:pointer;text-decoration:underline;padding:10px 6px}
 }
 @media (max-width:700px){
   body{font-size:16px}
-  header{margin-inline:calc(-1*var(--gutter-l)) calc(-1*var(--gutter-r));
+  header{position:static;margin-inline:calc(-1*var(--gutter-l)) calc(-1*var(--gutter-r));
     width:auto;max-width:none;padding:12px var(--gutter-r) 10px var(--gutter-l);gap:10px}
   .logo{font-size:1.7rem;order:1;margin-right:auto}
   .header-right{order:2;margin-left:0}
