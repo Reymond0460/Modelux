@@ -69,6 +69,7 @@ let onlyFavs       = false;
 let favs           = new Set();
 try { favs = new Set(JSON.parse(localStorage.getItem('modelux_favs') || '[]')); } catch (e) {}
 function saveFavs() { try { localStorage.setItem('modelux_favs', JSON.stringify([...favs])); } catch (e) {} }
+const SITE_URL = 'https://happypocket-5b7e9.web.app';
 const WA_NUMBER = '56940916058'; // Tu número fijo de WhatsApp (sin + ni espacios)
 let unsubscribe    = null;    // listener de Firestore en tiempo real
 
@@ -107,11 +108,25 @@ function startRealtimeListener() {
       products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       renderProducts();
       hideLoader();
+      openLinkedProduct();
     }, err => {
       console.error('Firestore error:', err);
       showToast('Error al conectar con la base de datos');
       hideLoader();
     });
+}
+
+/* Enlace ?p=ID (viene en los pedidos de WhatsApp): muestra la foto de esa prenda */
+let linkedHandled = false;
+function openLinkedProduct() {
+  if (linkedHandled) return;
+  const id = new URLSearchParams(location.search).get('p');
+  if (!id) { linkedHandled = true; return; }
+  const p = products.find(x => x.id === id);
+  linkedHandled = true;
+  if (!p) return showToast('Esa prenda ya no está disponible');
+  if (p.images && p.images.length) openImgModal(p.images[0]);
+  else showToast(p.name + ' · ' + p.brand);
 }
 
 function hideLoader() {
@@ -725,6 +740,7 @@ function sendToWhatsApp(){
     lines.push(`*${i+1}. ${item.name}*`,
       `   Marca: ${item.brand}`,`   Talla: ${item.size}`,
       `   Cantidad: ${item.qty}`,
+      `   Ver foto: ${SITE_URL}/?p=${item.id}`,
       `   Subtotal: $${(item.price*item.qty).toLocaleString('es-CL')}`,'');
   });
   const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
