@@ -13,22 +13,15 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 const PRODUCTS_COL = 'productos'; // nombre de la colección en Firestore
 
 /* ══════════════════════════════════════════════════
-   CREDENCIALES ADMIN (guardadas en localStorage)
-   Por defecto → usuario: admin / contraseña: admin123
-   Cámbialas desde el panel después del primer login
+   SESIÓN ADMIN — Firebase Authentication (correo + contraseña)
+   El permiso real de escritura lo da firestore.rules;
+   isAdmin solo controla qué se muestra en pantalla.
 ══════════════════════════════════════════════════ */
-function getCreds() {
-  return {
-    user: localStorage.getItem('mx_user') || 'admin',
-    pass: localStorage.getItem('mx_pass') || 'admin123'
-  };
-}
-
-/* Sesión → sessionStorage (se borra al cerrar el navegador) */
-let isAdmin = sessionStorage.getItem('mx_session') === '1';
+let isAdmin = false;
 
 /* ══════════════════════════════════════════════════
    COMPRESIÓN DE IMAGEN CON CANVAS
@@ -82,8 +75,15 @@ function init() {
   applyRole();
   renderCart();
   updateCartCount();
-  if (isAdmin) initSizeChips();
   startRealtimeListener();  // escucha cambios en Firestore en tiempo real
+  // Firebase recuerda la sesión; esto la restaura o la cierra
+  auth.onAuthStateChanged(user => {
+    const was = isAdmin;
+    isAdmin = !!user;
+    applyRole();
+    if (isAdmin && !was) initSizeChips();
+    renderProducts();
+  });
 }
 
 /* ══════════════════════════════════════════════════
@@ -163,39 +163,33 @@ function openLogin() {
 function closeLogin() {
   document.getElementById('loginModal').classList.remove('open');
 }
-function doLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  const c = getCreds();
-  if (u === c.user && p === c.pass) {
-    isAdmin = true;
-    sessionStorage.setItem('mx_session', '1');
+async function doLogin() {
+  const email = document.getElementById('loginUser').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
     closeLogin();
-    applyRole();
-    initSizeChips();
     showToast('✦ Bienvenido al panel de administración');
-  } else {
+  } catch (e) {
     document.getElementById('loginErr').classList.add('show');
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
   }
 }
-function logout() {
+async function logout() {
   if (!confirm('¿Cerrar sesión de administrador?')) return;
-  isAdmin = false;
-  sessionStorage.removeItem('mx_session');
-  applyRole();
+  await auth.signOut();
   showToast('Sesión cerrada');
 }
-function changePassword() {
-  const np = document.getElementById('newPass').value;
-  const cp = document.getElementById('confirmPass').value;
-  if (np.length < 4) return showToast('⚠ Mínimo 4 caracteres');
-  if (np !== cp)      return showToast('⚠ Las contraseñas no coinciden');
-  localStorage.setItem('mx_pass', np);
-  document.getElementById('newPass').value    = '';
-  document.getElementById('confirmPass').value = '';
-  showToast('✦ Contraseña actualizada');
+async function changePassword() {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    await auth.sendPasswordResetEmail(user.email);
+    showToast('✦ Te enviamos un correo para cambiar la contraseña');
+  } catch (e) {
+    showToast('⚠ No se pudo enviar el correo');
+  }
 }
 
 /* ══════════════════════════════════════════════════
@@ -668,9 +662,9 @@ function renderCheckout(){
     if(item.image){imgEl=mk('img','co-img');imgEl.src=item.image;imgEl.alt=item.name;}
     else{imgEl=mk('div','co-ph','👗');}
     const info=mk('div','co-info');
-    info.innerHTML=`<div class="co-brand">${item.brand}</div>
-      <div class="co-name">${item.name}</div>
-      <div class="co-meta">Talla: ${item.size} · Cantidad: ${item.qty}</div>`;
+    info.append(mk('div','co-brand',item.brand),
+      mk('div','co-name',item.name),
+      mk('div','co-meta','Talla: '+item.size+' · Cantidad: '+item.qty));
     const pr=mk('div','co-price','$'+(item.price*item.qty).toLocaleString('es-CL'));
     row.append(imgEl,info,pr); container.appendChild(row);
   });

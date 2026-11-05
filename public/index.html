@@ -14,6 +14,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -109,18 +110,8 @@
       <!-- Configuración -->
       <div class="settings-card">
         <div class="settings-title">⚙️ Configuración</div>
-        <p class="settings-desc">Cambia tu contraseña de administrador.</p>
-        <div class="settings-row">
-          <div class="fg">
-            <label>Nueva contraseña</label>
-            <input type="password" id="newPass" placeholder="Mínimo 4 caracteres"/>
-          </div>
-          <div class="fg">
-            <label>Confirmar</label>
-            <input type="password" id="confirmPass" placeholder="Repite la contraseña"/>
-          </div>
-        </div>
-        <button class="btn-primary" style="margin-top:0" onclick="changePassword()">Guardar contraseña</button>
+        <p class="settings-desc">Te enviaremos un correo para cambiar tu contraseña.</p>
+        <button class="btn-primary" style="margin-top:0" onclick="changePassword()">Enviar correo de cambio de contraseña</button>
       </div>
     </div>
   </div>
@@ -153,10 +144,10 @@
   <div class="modal">
     <div class="login-logo">MODE<span>LUX</span></div>
     <p class="login-sub">Acceso exclusivo para administradores</p>
-    <div class="login-err" id="loginErr">Usuario o contraseña incorrectos</div>
+    <div class="login-err" id="loginErr">Correo o contraseña incorrectos</div>
     <div class="fg">
-      <label>Usuario</label>
-      <input type="text" id="loginUser" placeholder="admin" autocomplete="username"/>
+      <label>Correo</label>
+      <input type="email" id="loginUser" placeholder="correo@ejemplo.com" autocomplete="username"/>
     </div>
     <div class="fg">
       <label>Contraseña</label>

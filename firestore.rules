@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ⚠ Cambia este correo por el del administrador (el creado en Firebase Authentication)
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'TU_CORREO_ADMIN@ejemplo.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    // Catálogo: lectura pública, escritura solo admin
+    match /productos/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() < 120
+        && request.resource.data.price is number
+        && request.resource.data.price >= 0;
+      allow delete: if isAdmin();
+    }
+
+    // Todo lo demás, bloqueado
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
