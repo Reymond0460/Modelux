@@ -2,10 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ⚠ Cambia este correo por el del administrador (el creado en Firebase Authentication)
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == 'TU_CORREO_ADMIN@ejemplo.com'
+        && request.auth.token.email == 'brayan@admin.cl'
         && request.auth.token.email_verified == true;
     }
 
