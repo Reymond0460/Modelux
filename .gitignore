@@ -67,3 +67,17 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Credenciales y archivos sensibles — NUNCA subir
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*service-account*.json
+*serviceAccount*.json
+*credentials*.json
+.runtimeconfig.json
+firebase-adminsdk*.json
+.firebase/
+*.zip
