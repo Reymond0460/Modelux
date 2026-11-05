@@ -156,6 +156,7 @@
     <div class="login-logo">MODE<span>LUX</span></div>
     <p class="login-sub">Acceso exclusivo para administradores</p>
     <div class="login-err" id="loginErr">Correo o contraseña incorrectos</div>
+    <form onsubmit="event.preventDefault();doLogin()">
     <div class="fg">
       <label>Correo</label>
       <input type="email" id="loginUser" placeholder="correo@ejemplo.com" autocomplete="username"/>
@@ -163,10 +164,11 @@
     <div class="fg">
       <label>Contraseña</label>
       <input type="password" id="loginPass" placeholder="••••••••"
-        autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+        autocomplete="current-password"/>
     </div>
-    <button class="btn-login" onclick="doLogin()">Ingresar al panel</button>
-    <button class="btn-cancel-login" onclick="closeLogin()">Cancelar</button>
+    <button type="submit" class="btn-login">Ingresar al panel</button>
+    </form>
+    <button type="button" class="btn-cancel-login" onclick="closeLogin()">Cancelar</button>
   </div>
 </div>
 
