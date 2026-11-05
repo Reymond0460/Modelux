@@ -62,6 +62,13 @@ let pendingProduct = null;
 let pendingSize    = null;
 let editingProductId = null;  // ID de la prenda que se está editando (null = modo agregar)
 let currentFilter  = 'all';
+let currentCat     = 'all';
+let searchQuery    = '';
+let sortMode       = 'new';
+let onlyFavs       = false;
+let favs           = new Set();
+try { favs = new Set(JSON.parse(localStorage.getItem('modelux_favs') || '[]')); } catch (e) {}
+function saveFavs() { try { localStorage.setItem('modelux_favs', JSON.stringify([...favs])); } catch (e) {} }
 const WA_NUMBER = '56940916058'; // Tu número fijo de WhatsApp (sin + ni espacios)
 let unsubscribe    = null;    // listener de Firestore en tiempo real
 
@@ -118,27 +125,39 @@ function hideLoader() {
 ══════════════════════════════════════════════════ */
 function applyRole() {
   const hr = document.getElementById('headerRight');
+  const favBtn = `<button class="fav-toggle" id="favToggle" aria-pressed="${onlyFavs}" onclick="toggleOnlyFavs()">♡<span class="hide-m"> Favoritos</span> <span class="fav-count" id="favCount">${favs.size}</span></button>`;
   if (isAdmin) {
     document.body.classList.add('admin-mode');
     hr.innerHTML = `
       <span class="admin-badge">Admin</span>
-      <button class="tab-btn active" id="btnTienda" onclick="switchTab('tienda')">🛍 Tienda</button>
-      <button class="tab-btn" id="btnAdmin" onclick="switchTab('admin')">➕ Agregar prenda</button>
-      <button class="cart-btn" onclick="openCart()">
-        🛒 <span class="cart-count" id="cartCount">0</span>
-      </button>
-      <button class="btn-logout" onclick="logout()">Cerrar sesión</button>`;
+      <button class="tab-btn active" id="btnTienda" onclick="switchTab('tienda')">Tienda</button>
+      <button class="tab-btn" id="btnAdmin" onclick="switchTab('admin')">+ Agregar</button>
+      ${favBtn}
+      <button class="cart-btn" onclick="openCart()">Carrito <span class="cart-count" id="cartCount">0</span></button>
+      <button class="btn-logout" onclick="logout()">Salir</button>`;
     document.getElementById('adminLink').style.display = 'none';
   } else {
     document.body.classList.remove('admin-mode');
     hr.innerHTML = `
-      <button class="cart-btn" onclick="openCart()">
-        🛒 Carrito <span class="cart-count" id="cartCount">0</span>
-      </button>`;
+      ${favBtn}
+      <button class="cart-btn" onclick="openCart()">Carrito <span class="cart-count" id="cartCount">0</span></button>`;
     document.getElementById('adminLink').style.display = 'inline';
     switchTab('tienda');
   }
   updateCartCount();
+}
+
+function toggleOnlyFavs() {
+  onlyFavs = !onlyFavs;
+  const b = document.getElementById('favToggle');
+  if (b) b.setAttribute('aria-pressed', onlyFavs);
+  renderProducts();
+}
+function toggleFav(id) {
+  favs.has(id) ? favs.delete(id) : favs.add(id);
+  saveFavs();
+  const c = document.getElementById('favCount'); if (c) c.textContent = favs.size;
+  renderProducts();
 }
 
 function switchTab(tab) {
@@ -426,26 +445,34 @@ async function deleteProduct(id) {
 /* ══════════════════════════════════════════════════
    RENDER PRODUCTOS
 ══════════════════════════════════════════════════ */
+function filteredProducts() {
+  const q = searchQuery.trim().toLowerCase();
+  const r = products.filter(p =>
+    (currentFilter === 'all' || p.brand === currentFilter) &&
+    (currentCat === 'all' || p.cat === currentCat) &&
+    (!q || ((p.name || '') + ' ' + (p.brand || '')).toLowerCase().includes(q)) &&
+    (!onlyFavs || favs.has(p.id)));
+  if (sortMode === 'lo') r.sort((a, b) => a.price - b.price);
+  if (sortMode === 'hi') r.sort((a, b) => b.price - a.price);
+  return r;
+}
+
 function renderProducts(brandFilter) {
   if (brandFilter !== undefined) currentFilter = brandFilter;
   const grid  = document.getElementById('productsGrid');
   const count = document.getElementById('productCount');
   grid.innerHTML = '';
 
-  const filtered = currentFilter === 'all'
-    ? products
-    : products.filter(p => p.brand === currentFilter);
-
-  count.textContent = filtered.length
-    ? `${filtered.length} prenda${filtered.length !== 1 ? 's' : ''} disponible${filtered.length !== 1 ? 's' : ''}`
-    : '0 prendas disponibles';
+  const filtered = filteredProducts();
+  count.textContent = `${filtered.length} prenda${filtered.length !== 1 ? 's' : ''} disponible${filtered.length !== 1 ? 's' : ''}`;
 
   if (!filtered.length) {
     const es = document.createElement('div'); es.className = 'empty-state';
-    es.innerHTML = '<div class="big-icon">👗</div>'
-      + (isAdmin
-        ? '<p>No hay prendas aún</p><small>Ve a <strong>"Agregar prenda"</strong> para empezar</small>'
-        : '<p>No hay prendas disponibles aún</p><small>Vuelve pronto 🌸</small>');
+    const filtering = products.length && (searchQuery || onlyFavs || currentFilter !== 'all' || currentCat !== 'all');
+    es.innerHTML = '<div class="big-icon">👗</div>';
+    es.appendChild(mk('p', '', filtering ? 'Nada por aquí' : 'No hay prendas aún'));
+    es.appendChild(mk('small', '', filtering ? 'Prueba con otra marca o borra la búsqueda.'
+      : (isAdmin ? 'Ve a "+ Agregar" para empezar.' : 'Vuelve pronto.')));
     grid.appendChild(es);
     updateFilterBar(); return;
   }
@@ -453,8 +480,9 @@ function renderProducts(brandFilter) {
   filtered.forEach((p, idx) => {
     const card = document.createElement('div');
     card.className = 'product-card';
-    card.style.animationDelay = (idx * 0.05) + 's';
+    card.style.animationDelay = Math.min(idx, 12) * 0.04 + 's';
 
+    const media = mk('div', 'product-media');
     let imgEl;
     if (p.images && p.images.length) {
       imgEl = document.createElement('img');
@@ -462,37 +490,37 @@ function renderProducts(brandFilter) {
       imgEl.loading   = 'lazy';
       imgEl.addEventListener('click', () => openImgModal(p.images[0]));
     } else {
-      imgEl = document.createElement('div');
-      imgEl.className = 'product-img-placeholder'; imgEl.textContent = '👗';
+      imgEl = mk('div', 'product-img-placeholder', '👗');
     }
+    const fav = mk('button', 'fav-btn', favs.has(p.id) ? '♥' : '♡');
+    fav.setAttribute('aria-pressed', favs.has(p.id));
+    fav.setAttribute('aria-label', 'Favorito');
+    fav.addEventListener('click', () => toggleFav(p.id));
+    media.append(imgEl, fav);
 
-    const info = document.createElement('div'); info.className = 'product-info';
+    const info = mk('div', 'product-info');
     const brandEl = mk('div','product-brand', p.brand);
     const nameEl  = mk('div','product-name',  p.name);
     const priceEl = mk('div','product-price', '$' + Number(p.price).toLocaleString('es-CL'));
 
-    const sizesDiv = document.createElement('div'); sizesDiv.className = 'product-sizes';
-    (p.sizes && p.sizes.length ? p.sizes : ['Sin tallas']).forEach(s => {
-      const tag = mk('span', 'size-tag', s);
-      if (s === 'Sin tallas') tag.style.color = '#bbb';
-      sizesDiv.appendChild(tag);
-    });
+    const sizesDiv = mk('div', 'product-sizes');
+    (p.sizes && p.sizes.length ? p.sizes : ['Sin tallas']).forEach(s => sizesDiv.appendChild(mk('span', 'size-tag', s)));
 
-    const actions = document.createElement('div'); actions.className = 'card-actions';
-    const btnCart = mk('button', 'btn-add-cart', '🛒 Agregar');
+    const actions = mk('div', 'card-actions');
+    const btnCart = mk('button', 'btn-add-cart', 'Agregar');
     btnCart.addEventListener('click', () => openSizeModal(p.id));
 
     const btnEdit = mk('button', 'btn-edit', '✏️');
-    btnEdit.title = 'Editar prenda';
+    btnEdit.title = 'Editar prenda'; btnEdit.setAttribute('aria-label', 'Editar');
     btnEdit.addEventListener('click', () => editProduct(p.id));
 
     const btnDel = mk('button', 'btn-delete', '🗑');
-    btnDel.title = 'Eliminar prenda';
+    btnDel.title = 'Eliminar prenda'; btnDel.setAttribute('aria-label', 'Eliminar');
     btnDel.addEventListener('click', () => deleteProduct(p.id));
 
     actions.append(btnCart, btnEdit, btnDel);
     info.append(brandEl, nameEl, priceEl, sizesDiv, actions);
-    card.append(imgEl, info);
+    card.append(media, info);
     grid.appendChild(card);
   });
 
@@ -511,20 +539,18 @@ function mk(tag, cls, text) {
    FILTRO POR MARCA
 ══════════════════════════════════════════════════ */
 function updateFilterBar() {
-  const bar = document.getElementById('filterBar');
-  bar.innerHTML = '';
-  const mkChip = (label, brand) => {
-    const c = mk('span', 'filter-chip' + (currentFilter === brand ? ' active' : ''), label);
-    c.dataset.brand = brand;
-    c.onclick = () => {
-      bar.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
-      c.classList.add('active');
-      renderProducts(brand);
-    };
-    bar.appendChild(c);
+  const build = (el, label, values, current, onPick) => {
+    el.innerHTML = '';
+    [['Todas', 'all'], ...values.map(v => [v, v])].forEach(([text, val]) => {
+      const c = mk('button', 'filter-chip' + (current === val ? ' active' : ''), text);
+      c.onclick = () => onPick(val);
+      el.appendChild(c);
+    });
   };
-  mkChip('Todas', 'all');
-  [...new Set(products.map(p => p.brand))].forEach(b => mkChip(b, b));
+  build(document.getElementById('filterBar'), 'Marca',
+    [...new Set(products.map(p => p.brand).filter(Boolean))], currentFilter, v => renderProducts(v));
+  build(document.getElementById('catBar'), 'Categoría',
+    [...new Set(products.map(p => p.cat).filter(Boolean))], currentCat, v => { currentCat = v; renderProducts(); });
 }
 
 /* ══════════════════════════════════════════════════
@@ -623,9 +649,16 @@ function removeFromCart(key){
   cart=cart.filter(i=>i.key!==key); saveCart(); renderCart(); updateCartCount();
 }
 function updateCartCount(){
-  document.querySelectorAll('#cartCount').forEach(el=>{
-    el.textContent=cart.reduce((s,i)=>s+i.qty,0);
-  });
+  const n=cart.reduce((s,i)=>s+i.qty,0), t=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  document.querySelectorAll('#cartCount').forEach(el=>{ el.textContent=n; });
+  document.getElementById('cbN').textContent='Ver pedido · '+n+(n===1?' prenda':' prendas');
+  document.getElementById('cbT').textContent='$'+t.toLocaleString('es-CL');
+  syncCartBar();
+}
+function syncCartBar(){
+  const open=document.getElementById('cartSidebar').classList.contains('open')
+    || document.querySelector('.backdrop.open');
+  document.getElementById('cartBar').classList.toggle('show', cart.length>0 && !open);
 }
 function saveCart(){
   try { localStorage.setItem('modelux_cart',JSON.stringify(cart)); }
@@ -637,10 +670,12 @@ function saveCart(){
 function openCart(){
   document.getElementById('cartSidebar').classList.add('open');
   document.getElementById('cartOverlay').classList.add('open');
+  document.body.classList.add('lock'); syncCartBar();
 }
 function closeCart(){
   document.getElementById('cartSidebar').classList.remove('open');
   document.getElementById('cartOverlay').classList.remove('open');
+  document.body.classList.remove('lock'); syncCartBar();
 }
 
 /* ══════════════════════════════════════════════════
@@ -738,6 +773,8 @@ if (zone) {
 /* ══════════════════════════════════════════════════
    ARRANCAR LA APLICACIÓN
 ══════════════════════════════════════════════════ */
+document.getElementById('searchInput').addEventListener('input', e => { searchQuery = e.target.value; renderProducts(); });
+document.getElementById('sortSelect').addEventListener('change', e => { sortMode = e.target.value; renderProducts(); });
 init();
 
 /* ══════════════════════════════════════════════════

@@ -2,11 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="description" content="MODELUX: ropa elegida. Arma tu pedido y envíalo por WhatsApp."/>
   <title>MODELUX</title>
 
   <!-- Fuentes de Google -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
   <!-- Hojas de estilo -->
   <link rel="stylesheet" href="style.css"/>
@@ -26,6 +27,8 @@
 
 <header>
   <div class="logo">MODE<span>LUX</span></div>
+  <label class="search"><span aria-hidden="true">⌕</span>
+    <input id="searchInput" type="search" placeholder="Buscar prenda o marca" aria-label="Buscar" autocomplete="off"/></label>
   <div class="header-right" id="headerRight"></div>
 </header>
 
@@ -33,14 +36,22 @@
   <!-- TIENDA -->
   <div class="tab-content active" id="tab-tienda">
     <div class="store-section">
-      <div class="store-header">
+      <div class="hero">
+        <h1 class="store-title">Ropa elegida, <em>lista en un mensaje.</em></h1>
         <div>
-          <h1 class="store-title">Nuestra <em>Colección</em></h1>
+          <p class="hero-copy">Elige tus prendas, arma tu pedido y envíalo por WhatsApp. Sin registro, sin pagos online.</p>
           <p class="product-count" id="productCount">Cargando...</p>
         </div>
       </div>
-      <div class="filter-bar" id="filterBar">
-        <span class="filter-chip active" data-brand="all">Todas</span>
+      <div class="filters" aria-label="Filtros">
+        <div class="filter-row"><span class="filter-lbl">Categoría</span><div class="chips" id="catBar"></div></div>
+        <div class="filter-row"><span class="filter-lbl">Marca</span><div class="chips" id="filterBar"></div></div>
+        <div class="filter-row"><span class="filter-lbl">Orden</span>
+          <select class="sort-select" id="sortSelect" aria-label="Ordenar">
+            <option value="new">Más nuevas</option>
+            <option value="lo">Precio: menor a mayor</option>
+            <option value="hi">Precio: mayor a menor</option>
+          </select></div>
       </div>
       <div class="products-grid" id="productsGrid"></div>
     </div>
@@ -205,7 +216,9 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="cartbar" id="cartBar"><button onclick="openCart()"><span id="cbN"></span><span id="cbT"></span></button></div>
+
+<div class="toast" id="toast" role="status"></div>
 
 <!-- Lógica JavaScript -->
 <script src="script.js"></script>
