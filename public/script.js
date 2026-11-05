@@ -190,7 +190,17 @@ async function doLogin() {
     closeLogin();
     showToast('✦ Bienvenido al panel de administración');
   } catch (e) {
-    document.getElementById('loginErr').classList.add('show');
+    console.error('Login:', e.code, e.message);
+    const msgs = {
+      'auth/operation-not-allowed': 'El acceso con correo y contraseña no está activado en Firebase.',
+      'auth/network-request-failed': 'Sin conexión. Revisa tu internet.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.',
+      'auth/invalid-email': 'El correo no es válido.',
+      'auth/user-disabled': 'Esta cuenta está deshabilitada.'
+    };
+    const err = document.getElementById('loginErr');
+    err.textContent = msgs[e.code] || 'Correo o contraseña incorrectos';
+    err.classList.add('show');
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
   }
