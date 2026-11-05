@@ -4,8 +4,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == 'brayan@admin.cl'
-        && request.auth.token.email_verified == true;
+        && request.auth.uid == 'LikjipTpVcROM4kZCr1f2Wax94P2';
     }
 
     // Catálogo: lectura pública, escritura solo admin
