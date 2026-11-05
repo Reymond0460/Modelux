@@ -3,22 +3,17 @@
    Cambia estos valores para reescalar todo el sitio
 ════════════════════════════════════════ */
 :root {
-  --bg:#f3f2ef; --surface:#fbfaf8; --ink:#16161a; --mid:#6a6a72; --line:#dcdad4;
-  --accent:#2f3fd8; --accent-ink:#ffffff; --tint:#e6e8fb; --good:#1f7a4d; --danger:#c0392b;
-  --display:'Instrument Serif',Georgia,serif; --body:'Manrope',system-ui,sans-serif;
+  --bg:#f5f0ea; --surface:#ffffff; --ink:#1a1a1a; --mid:#6b6b6b; --line:#e0d8cf;
+  --accent:#c8533a; --accent-ink:#ffffff; --tint:#f0d5cf; --good:#1f7a4d; --danger:#c0392b;
+  --display:'Manrope',system-ui,sans-serif; --body:'Manrope',system-ui,sans-serif;
   --radius:10px; --shadow:0 4px 24px rgba(0,0,0,.07);
   --gutter-l:max(16px,env(safe-area-inset-left,0px));
   --gutter-r:max(16px,env(safe-area-inset-right,0px));
 }
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#101013; --surface:#18181c; --ink:#f1f0ec; --mid:#9a9aa3; --line:#2b2b31;
-    --accent:#7d8bff; --accent-ink:#0d0d18; --tint:#22243d; --good:#58c48b; --danger:#ff7a6b;
-    --shadow:0 4px 24px rgba(0,0,0,.4); color-scheme:dark;
-  }
-}
+:root{color-scheme:light}
 
 *{box-sizing:border-box;margin:0;padding:0}
+em,i{font-style:normal}
 html{-webkit-text-size-adjust:100%}
 body{font-family:var(--body);font-size:15px;line-height:1.5;background:var(--bg);color:var(--ink);
   min-height:100vh;display:flex;flex-direction:column;
@@ -36,7 +31,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:100;background:v
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;
   max-width:1180px;width:100%;margin:0 auto;padding-block:16px}
 .logo{font-family:var(--display);font-size:2rem;letter-spacing:.04em;line-height:1}
-.logo span{color:var(--accent);font-style:italic}
+.logo span{color:var(--accent)}
 .search{flex:1 1 280px;max-width:460px;min-width:0;display:flex;align-items:center;gap:8px;
   background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 16px}
 .search input{flex:1;min-width:0;border:0;background:none;outline:none;padding:11px 0;font-size:15px}
@@ -60,7 +55,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:100;background:v
   align-items:center;justify-content:center;z-index:500;transition:opacity .4s}
 .page-loader.hidden{opacity:0;pointer-events:none}
 .page-loader .brand{font-family:var(--display);font-size:2.4rem;letter-spacing:.06em;margin-bottom:20px}
-.page-loader .brand span{color:var(--accent);font-style:italic}
+.page-loader .brand span{color:var(--accent)}
 .loader-bar{width:160px;height:2px;background:var(--line);border-radius:2px;overflow:hidden}
 .loader-fill{height:100%;width:0;background:var(--accent);animation:loadFill 1.4s ease forwards}
 @keyframes loadFill{to{width:100%}}
@@ -216,7 +211,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:100;background:v
 @keyframes popIn{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 #loginModal .modal{max-width:380px;padding:36px 30px;text-align:center}
 .login-logo{font-family:var(--display);font-size:2.2rem;letter-spacing:.04em;margin-bottom:4px}
-.login-logo span{color:var(--accent);font-style:italic}
+.login-logo span{color:var(--accent)}
 .login-sub{color:var(--mid);font-size:14px;margin-bottom:24px}
 .login-err{background:var(--tint);color:var(--danger);border-radius:8px;padding:9px 14px;font-size:13px;margin-bottom:16px;display:none}
 .login-err.show{display:block}
@@ -318,3 +313,9 @@ footer a{cursor:pointer;text-decoration:underline;padding:10px 6px}
   .toast{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Una sola tipografía: los títulos usan Manrope en negrita */
+.logo,.store-title,.product-name,.panel-title,.settings-title,.cart-head h2,.ci-name,.co-head h2,.co-name,
+.login-logo,#sizeModal h3,.empty-state p,.page-loader .brand{font-weight:700;letter-spacing:-.01em}
+.store-title{letter-spacing:-.03em;line-height:1.02}
+.logo,.login-logo,.page-loader .brand{letter-spacing:.02em}

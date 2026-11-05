@@ -574,8 +574,6 @@ function updateFilterBar() {
   };
   build(document.getElementById('filterBar'), 'Marca',
     [...new Set(products.map(p => p.brand).filter(Boolean))], currentFilter, v => renderProducts(v));
-  build(document.getElementById('catBar'), 'Categoría',
-    [...new Set(products.map(p => p.cat).filter(Boolean))], currentCat, v => { currentCat = v; renderProducts(); });
 }
 
 /* ══════════════════════════════════════════════════
