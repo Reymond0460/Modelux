@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MODELUX</title>
+
+  <!-- Fuentes de Google -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+  <!-- Hojas de estilo -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="page-loader" id="pageLoader">
+  <div class="brand">MODE<span>LUX</span></div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
+
+<header>
+  <div class="logo">MODE<span>LUX</span></div>
+  <div class="header-right" id="headerRight"></div>
+</header>
+
+<main>
+  <!-- TIENDA -->
+  <div class="tab-content active" id="tab-tienda">
+    <div class="store-section">
+      <div class="store-header">
+        <div>
+          <h1 class="store-title">Nuestra <em>Colección</em></h1>
+          <p class="product-count" id="productCount">Cargando...</p>
+        </div>
+      </div>
+      <div class="filter-bar" id="filterBar">
+        <span class="filter-chip active" data-brand="all">Todas</span>
+      </div>
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN: AGREGAR PRENDA -->
+  <div class="tab-content" id="tab-admin">
+    <div class="admin-panel">
+  <h1 class="panel-title" id="panelTitle">Agregar Prenda</h1>
+  <p class="panel-sub" id="panelSub">Sube las fotos y completa los datos del producto</p>
+      <div class="form-card">
+        <div class="fg">
+          <label>Fotos del producto (máx. 3)</label>
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" accept="image/*" multiple id="fileInput" onchange="handleImages(this)"/>
+            <div class="upload-icon">📸</div>
+            <div class="upload-label">
+              <strong>Haz clic aquí</strong> o arrastra tus fotos
+            </div>
+            <p class="img-limit-note">Máximo 3 imágenes · Se comprimen automáticamente</p>
+          </div>
+          <div class="preview-grid" id="previewGrid"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg" style="margin-bottom:0">
+            <label>Nombre del producto *</label>
+            <input type="text" id="productName" placeholder="Ej: Camiseta lino oversize"/>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label>Marca *</label>
+            <input type="text" id="productBrand" placeholder="Ej: Zara, H&M, Propia..."/>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:18px">
+          <div class="fg" style="margin-bottom:0">
+            <label>Precio (CLP) *</label>
+            <input type="text" id="productPrice" inputmode="numeric"
+              placeholder="Ej: 15000" oninput="onPriceInput(this)"/>
+            <span class="price-hint" id="priceHint"></span>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label>Categoría</label>
+            <select id="productCategory">
+              <option>Mujer</option><option>Hombre</option>
+              <option>Unisex</option><option>Niños</option><option>Accesorios</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg" style="margin-top:18px">
+          <label>Tallas disponibles</label>
+          <div class="sizes-grid" id="sizesGrid"></div>
+          <div class="custom-size">
+            <input type="text" id="customSizeInput" placeholder="Talla personalizada (ej: 42, Único)"/>
+            <button onclick="addCustomSize()">+ Agregar</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Descripción (opcional)</label>
+          <textarea id="productDesc" rows="3"
+            placeholder="Material, estilo, instrucciones de lavado..."></textarea>
+        </div>
+        <button class="btn-primary" id="btnAdd" onclick="addProduct()">✦ Agregar a la tienda</button>
+        <button class="btn-cancel-edit" id="btnCancelEdit" onclick="cancelEdit()" style="display:none">Cancelar edición</button>
+        <div class="saving-bar" id="savingBar"><div class="spinner"></div> Guardando en la nube...</div>
+      </div>
+
+      <!-- Configuración -->
+      <div class="settings-card">
+        <div class="settings-title">⚙️ Configuración</div>
+        <p class="settings-desc">Cambia tu contraseña de administrador.</p>
+        <div class="settings-row">
+          <div class="fg">
+            <label>Nueva contraseña</label>
+            <input type="password" id="newPass" placeholder="Mínimo 4 caracteres"/>
+          </div>
+          <div class="fg">
+            <label>Confirmar</label>
+            <input type="password" id="confirmPass" placeholder="Repite la contraseña"/>
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-top:0" onclick="changePassword()">Guardar contraseña</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  © 2025 MODELUX &nbsp;·&nbsp;
+  <a id="adminLink" onclick="openLogin()">Administrador</a>
+</footer>
+
+<!-- CART -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-head">
+    <h2>Tu Carrito</h2>
+    <button class="close-cart" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody"></div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total">
+      <span>Total</span>
+      <span class="cart-total-val" id="cartTotal">$0</span>
+    </div>
+    <button class="btn-checkout" onclick="checkout()">Confirmar pedido →</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="backdrop" id="loginModal">
+  <div class="modal">
+    <div class="login-logo">MODE<span>LUX</span></div>
+    <p class="login-sub">Acceso exclusivo para administradores</p>
+    <div class="login-err" id="loginErr">Usuario o contraseña incorrectos</div>
+    <div class="fg">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username"/>
+    </div>
+    <div class="fg">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••••"
+        autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Ingresar al panel</button>
+    <button class="btn-cancel-login" onclick="closeLogin()">Cancelar</button>
+  </div>
+</div>
+
+<!-- SIZE MODAL -->
+<div class="backdrop" id="sizeModal">
+  <div class="modal">
+    <h3>Selecciona tu talla</h3>
+    <p id="sizeModalName"></p>
+    <div class="modal-sizes" id="modalSizes"></div>
+    <div class="modal-actions">
+      <button class="btn-mc" onclick="closeSizeModal()">Cancelar</button>
+      <button class="btn-mok" onclick="confirmAddToCart()">Agregar al carrito</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE MODAL -->
+<div class="backdrop" id="imgModal" onclick="if(event.target===this)closeImgModal()">
+  <button class="img-close" onclick="closeImgModal()">✕</button>
+  <img id="imgModalSrc" src="" alt=""/>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="backdrop" id="checkoutModal" onclick="if(event.target===this)closeCheckout()">
+  <div class="modal">
+    <div class="co-head">
+      <h2>Resumen del pedido</h2>
+      <button onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="co-items" id="coItems"></div>
+    <div class="co-foot">
+      <div class="co-total-row">
+        <div>
+          <div class="co-total-lbl">Total a pagar</div>
+          <div class="co-total-items" id="coTotalItems"></div>
+        </div>
+        <div class="co-total-amt" id="coTotalAmt">$0</div>
+      </div>
+      <button class="btn-wa" onclick="sendToWhatsApp()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Enviar pedido por WhatsApp
+      </button>
+      <p class="co-note">Se abrirá WhatsApp con el detalle del pedido listo para enviar</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Lógica JavaScript -->
+<script src="script.js"></script>
+</body>
+</html>
