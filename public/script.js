@@ -735,7 +735,7 @@ function renderCheckout(){
 }
 function sendToWhatsApp(){
   const phone=WA_NUMBER;
-  const lines=['🛍 *Nuevo pedido — MODELUX*',''];
+  const lines=['*Nuevo pedido - MODELUX*',''];
   cart.forEach((item,i)=>{
     lines.push(`*${i+1}. ${item.name}*`,
       `   Marca: ${item.brand}`,`   Talla: ${item.size}`,
@@ -747,7 +747,7 @@ function sendToWhatsApp(){
   const qty  =cart.reduce((s,i)=>s+i.qty,0);
   lines.push('─────────────────',
     `*Total: $${total.toLocaleString('es-CL')}* (${qty} producto${qty!==1?'s':''})`,
-    '','¡Hola! Me gustaría hacer este pedido. ¿Me confirmas disponibilidad? 😊');
+    '','¡Hola! Me gustaría hacer este pedido. ¿Me confirmas disponibilidad?');
   window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(lines.join('\n')),'_blank');
 }
 
