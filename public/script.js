@@ -69,7 +69,7 @@ let onlyFavs       = false;
 let favs           = new Set();
 try { favs = new Set(JSON.parse(localStorage.getItem('modelux_favs') || '[]')); } catch (e) {}
 function saveFavs() { try { localStorage.setItem('modelux_favs', JSON.stringify([...favs])); } catch (e) {} }
-const SITE_URL = 'https://happypocket-5b7e9.web.app';
+const SITE_URL = 'https://modelux.cl';
 const WA_NUMBER = '56940916058'; // Tu número fijo de WhatsApp (sin + ni espacios)
 let unsubscribe    = null;    // listener de Firestore en tiempo real
 
