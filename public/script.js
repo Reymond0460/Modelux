@@ -598,7 +598,7 @@ function updateFilterBar() {
   const tipoSel = document.getElementById('tipoSelect');
   if (tipoSel) {
     tipoSel.innerHTML = '';
-    [['Todas', 'all'], ...tipos.map(t => [t + ' (' + counts[t] + ')', t])].forEach(([text, val]) => {
+    [['Todas', 'all'], ...tipos.map(t => [t, t])].forEach(([text, val]) => {
       const o = document.createElement('option');
       o.value = val; o.textContent = text;
       tipoSel.appendChild(o);
