@@ -63,6 +63,7 @@ let pendingSize    = null;
 let editingProductId = null;  // ID de la prenda que se está editando (null = modo agregar)
 let currentFilter  = 'all';
 let currentCat     = 'all';
+let currentTipo    = 'all';
 let searchQuery    = '';
 let sortMode       = 'new';
 let onlyFavs       = false;
@@ -72,6 +73,28 @@ function saveFavs() { try { localStorage.setItem('modelux_favs', JSON.stringify(
 const SITE_URL = 'https://modelux.cl';
 const WA_NUMBER = '56940916058'; // Tu número fijo de WhatsApp (sin + ni espacios)
 let unsubscribe    = null;    // listener de Firestore en tiempo real
+
+
+/* ══════════════════════════════════════════════════
+   TIPO DE PRENDA — campo "tipo" del producto, o se deduce del nombre
+══════════════════════════════════════════════════ */
+const TIPOS = ['Polera','Polerón','Blusa','Camisa','Sweater','Chaqueta','Blazer','Abrigo',
+  'Vestido','Falda','Pantalón','Jeans','Short','Otros'];
+const TIPO_REGLAS = [
+  ['Polerón', /poler[oó]n|hoodie|canguro/], ['Polera', /polera|t-?shirt|camiseta/],
+  ['Blusa', /blusa|top\b/], ['Camisa', /camisa/],
+  ['Sweater', /sweater|su[eé]ter|chaleco|cardigan|tejido/], ['Blazer', /blazer/],
+  ['Chaqueta', /chaqueta|casaca|parka|chaquet/], ['Abrigo', /abrigo|capa\b|trench/],
+  ['Vestido', /vestido|enterito|jumper/], ['Falda', /falda/],
+  ['Jeans', /jean|denim|mezclilla/], ['Pantalón', /pantal[oó]n|pantalon|palazzo|calza|jogger/],
+  ['Short', /short|bermuda/]
+];
+function tipoOf(p) {
+  if (p.tipo) return p.tipo;
+  const n = (p.name || '').toLowerCase();
+  const r = TIPO_REGLAS.find(([, re]) => re.test(n));
+  return r ? r[0] : 'Otros';
+}
 
 const DEFAULT_SIZES = ['XXS','XS','S','M','L','XL','XXL','XXXL'];
 const MAX_IMAGES    = 3;
@@ -316,6 +339,7 @@ async function addProduct() {
   const brand = document.getElementById('productBrand').value.trim();
   const price = parsePrice(document.getElementById('productPrice').value);
   const cat   = document.getElementById('productCategory').value;
+  const tipo  = document.getElementById('productTipo').value;
   const desc  = document.getElementById('productDesc').value.trim();
 
   if (!name)             return showToast('⚠ Ingresa el nombre');
@@ -331,6 +355,7 @@ async function addProduct() {
       // ─── MODO EDITAR ───
       const updates = {
         name, brand, price, cat, desc,
+        tipo: tipo || firebase.firestore.FieldValue.delete(),
         images: [...uploadedImages],
         sizes:  [...selectedSizes]
       };
@@ -340,7 +365,7 @@ async function addProduct() {
     } else {
       // ─── MODO AGREGAR ───
       const product = {
-        name, brand, price, cat, desc,
+        name, brand, price, cat, desc, ...(tipo ? { tipo } : {}),
         images:    [...uploadedImages],
         sizes:     [...selectedSizes],
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -392,6 +417,7 @@ function editProduct(productId) {
   document.getElementById('productBrand').value    = p.brand || '';
   document.getElementById('productPrice').value    = p.price || '';
   document.getElementById('productCategory').value = p.cat || 'Mujer';
+  document.getElementById('productTipo').value = p.tipo || '';
   document.getElementById('productDesc').value     = p.desc || '';
 
   // Disparar hint del precio
@@ -450,6 +476,7 @@ function resetForm() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const ph = document.getElementById('priceHint'); if (ph) ph.textContent = '';
+  const pt = document.getElementById('productTipo'); if (pt) pt.value = '';
   uploadedImages = []; renderPreview(); initSizeChips();
 }
 /* ══════════════════════════════════════════════════
@@ -475,6 +502,7 @@ function filteredProducts() {
   const r = products.filter(p =>
     (currentFilter === 'all' || p.brand === currentFilter) &&
     (currentCat === 'all' || p.cat === currentCat) &&
+    (currentTipo === 'all' || tipoOf(p) === currentTipo) &&
     (!q || ((p.name || '') + ' ' + (p.brand || '')).toLowerCase().includes(q)) &&
     (!onlyFavs || favs.has(p.id)));
   if (sortMode === 'lo') r.sort((a, b) => a.price - b.price);
@@ -493,7 +521,7 @@ function renderProducts(brandFilter) {
 
   if (!filtered.length) {
     const es = document.createElement('div'); es.className = 'empty-state';
-    const filtering = products.length && (searchQuery || onlyFavs || currentFilter !== 'all' || currentCat !== 'all');
+    const filtering = products.length && (searchQuery || onlyFavs || currentFilter !== 'all' || currentCat !== 'all' || currentTipo !== 'all');
     es.innerHTML = '<div class="big-icon">👗</div>';
     es.appendChild(mk('p', '', filtering ? 'Nada por aquí' : 'No hay prendas aún'));
     es.appendChild(mk('small', '', filtering ? 'Prueba con otra marca o borra la búsqueda.'
@@ -572,6 +600,18 @@ function updateFilterBar() {
       el.appendChild(c);
     });
   };
+  const counts = {};
+  products.forEach(p => { const t = tipoOf(p); counts[t] = (counts[t] || 0) + 1; });
+  const tipos = TIPOS.filter(t => counts[t]).concat(Object.keys(counts).filter(t => !TIPOS.includes(t)));
+  const tipoBar = document.getElementById('tipoBar');
+  if (tipoBar) {
+    tipoBar.innerHTML = '';
+    [['Todas', 'all'], ...tipos.map(t => [t + ' (' + counts[t] + ')', t])].forEach(([text, val]) => {
+      const c = mk('button', 'filter-chip' + (currentTipo === val ? ' active' : ''), text);
+      c.onclick = () => { currentTipo = val; renderProducts(); };
+      tipoBar.appendChild(c);
+    });
+  }
   build(document.getElementById('filterBar'), 'Marca',
     [...new Set(products.map(p => p.brand).filter(Boolean))], currentFilter, v => renderProducts(v));
 }
