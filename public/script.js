@@ -592,25 +592,18 @@ function mk(tag, cls, text) {
    FILTRO POR MARCA
 ══════════════════════════════════════════════════ */
 function updateFilterBar() {
-  const build = (el, label, values, current, onPick) => {
-    el.innerHTML = '';
-    [['Todas', 'all'], ...values.map(v => [v, v])].forEach(([text, val]) => {
-      const c = mk('button', 'filter-chip' + (current === val ? ' active' : ''), text);
-      c.onclick = () => onPick(val);
-      el.appendChild(c);
-    });
-  };
   const counts = {};
   products.forEach(p => { const t = tipoOf(p); counts[t] = (counts[t] || 0) + 1; });
   const tipos = TIPOS.filter(t => counts[t]).concat(Object.keys(counts).filter(t => !TIPOS.includes(t)));
-  const tipoBar = document.getElementById('tipoBar');
-  if (tipoBar) {
-    tipoBar.innerHTML = '';
+  const tipoSel = document.getElementById('tipoSelect');
+  if (tipoSel) {
+    tipoSel.innerHTML = '';
     [['Todas', 'all'], ...tipos.map(t => [t + ' (' + counts[t] + ')', t])].forEach(([text, val]) => {
-      const c = mk('button', 'filter-chip' + (currentTipo === val ? ' active' : ''), text);
-      c.onclick = () => { currentTipo = val; renderProducts(); };
-      tipoBar.appendChild(c);
+      const o = document.createElement('option');
+      o.value = val; o.textContent = text;
+      tipoSel.appendChild(o);
     });
+    tipoSel.value = (currentTipo === 'all' || tipos.includes(currentTipo)) ? currentTipo : 'all';
   }
 }
 
@@ -836,6 +829,7 @@ if (zone) {
    ARRANCAR LA APLICACIÓN
 ══════════════════════════════════════════════════ */
 document.getElementById('searchInput').addEventListener('input', e => { searchQuery = e.target.value; renderProducts(); });
+document.getElementById('tipoSelect').addEventListener('change', e => { currentTipo = e.target.value; renderProducts(); });
 document.getElementById('sortSelect').addEventListener('change', e => { sortMode = e.target.value; renderProducts(); });
 init();
 

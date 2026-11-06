@@ -56,13 +56,18 @@
         </div>
       </div>
       <div class="filters" aria-label="Filtros">
-        <div class="filter-row"><span class="filter-lbl">Prenda</span><div class="chips" id="tipoBar"></div></div>
-        <div class="filter-row"><span class="filter-lbl">Orden</span>
-          <select class="sort-select" id="sortSelect" aria-label="Ordenar">
-            <option value="new">Más nuevas</option>
-            <option value="lo">Precio: menor a mayor</option>
-            <option value="hi">Precio: mayor a menor</option>
-          </select></div>
+        <div class="filter-row filter-selects">
+          <label class="filter-field"><span class="filter-lbl">Prenda</span>
+            <select class="sort-select" id="tipoSelect" aria-label="Filtrar por tipo de prenda">
+              <option value="all">Todas</option>
+            </select></label>
+          <label class="filter-field"><span class="filter-lbl">Orden</span>
+            <select class="sort-select" id="sortSelect" aria-label="Ordenar">
+              <option value="new">Más nuevas</option>
+              <option value="lo">Precio: menor a mayor</option>
+              <option value="hi">Precio: mayor a menor</option>
+            </select></label>
+        </div>
       </div>
       <div class="products-grid" id="productsGrid"></div>
     </div>

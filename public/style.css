@@ -82,6 +82,9 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:100;background:v
   font-weight:500;cursor:pointer;background:none;user-select:none;white-space:nowrap}
 .filter-chip:hover{border-color:var(--ink)}
 .filter-chip.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filter-selects{gap:12px 16px}
+.filter-field{display:flex;align-items:center;gap:8px;min-width:0}
+.filter-field .filter-lbl{width:auto}
 .sort-select{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px}
 
 .products-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 18px}
@@ -284,6 +287,9 @@ footer a{cursor:pointer;text-decoration:underline;padding:10px 6px}
   .hero-copy{font-size:14px}
   .filters{gap:8px;padding-block:10px 16px}
   .filter-lbl{display:none}
+  .filter-selects{flex-wrap:wrap}
+  .filter-field{flex:1 1 150px}
+  .filter-field .sort-select{width:100%}
   .filter-row{flex-wrap:nowrap;margin-inline:calc(-1*var(--gutter-l)) calc(-1*var(--gutter-r));padding-inline:var(--gutter-l) var(--gutter-r)}
   .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
