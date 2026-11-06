@@ -612,8 +612,6 @@ function updateFilterBar() {
       tipoBar.appendChild(c);
     });
   }
-  build(document.getElementById('filterBar'), 'Marca',
-    [...new Set(products.map(p => p.brand).filter(Boolean))], currentFilter, v => renderProducts(v));
 }
 
 /* ══════════════════════════════════════════════════
